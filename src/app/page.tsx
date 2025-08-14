@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from "next/link";
+import { supabase } from '@/lib/supabaseClient';
 
 export default function Home() {
   return (
@@ -9,7 +10,7 @@ export default function Home() {
       </header>
       <main className="max-w-3xl text-center">
         <p className="text-lg leading-relaxed text-gray-400 mb-10">
-          Welcome to Placeholder — your go-to platform for unlocking potential through modern, science-backed, and holistic learning methods.
+          Welcome to Placeholder — Doing the simple things, but better. Unlock your potential through modern, customised, and holistic learning methods.
         </p>
         <section className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-14">
           <div className="bg-[#1e1e1e] p-5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">

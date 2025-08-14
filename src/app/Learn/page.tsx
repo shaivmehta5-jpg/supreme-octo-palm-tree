@@ -1,7 +1,8 @@
 // src/app/Learn/page.tsx
+"use client"
 import React from 'react';
 import Link from "next/link";
-
+import { supabase } from '../lib/supabaseClient'
 export default function SubjectsPage() {
   const subjects = [
     { name: "Physics", href: "Learn/physics" },
@@ -23,6 +24,21 @@ export default function SubjectsPage() {
           </Link>
         ))}
       </div>
+      <button
+        onClick={async () => {
+          const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+              redirectTo: `${location.origin}/auth/callback`,
+            },
+          });
+          if (error) console.error("Error signing in:", error);
+        }}
+        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md"
+      >
+        Sign in with Google
+      </button>
     </main>
+
   );
 }

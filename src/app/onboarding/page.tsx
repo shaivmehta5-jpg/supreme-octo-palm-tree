@@ -99,9 +99,12 @@ export default function OnboardingPage() {
 
   // Load session + profile
   React.useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
+  (async () => {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    console.log("Session:", session);
+    console.log("Session error:", sessionError);
+
+    if (!session?.user) {
       // No session? Kick off Google OAuth directly.
       await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -109,34 +112,39 @@ export default function OnboardingPage() {
       });
       return;
     }
-      setUserId(session.user.id);
 
-      const { data, error } = await supabase
-        .from("user_profile")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
+    setUserId(session.user.id);
 
-      if (!error && data) {
-        if (data.completed_onboarding) {
-          router.replace("/home");
-          return;
-        }
+    const { data, error: profileError } = await supabase
+      .from("user_profile")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
 
-        const isBtech = data.education_level === "btech";
-        form.reset({
-          track: isBtech ? "btech" : (data.school_year as "11" | "12") ?? undefined,
-          btechYear: (data.btech_year as "1" | "2" | "3" | "4") ?? undefined,
-          stream: (data.stream as FormValues["stream"]) ?? undefined,
-          interests: Array.isArray(data.interests) ? data.interests : [],
-          extraInterests: data.extra_interests ?? "",
-        });
+    console.log("Profile:", data);
+    console.log("Profile error:", profileError);
+
+    if (!profileError && data) {
+      if (data.completed_onboarding) {
+        router.replace("/home");
+        return;
       }
 
-      setLoading(false);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      const isBtech = data.education_level === "btech";
+      form.reset({
+        track: isBtech ? "btech" : (data.school_year as "11" | "12") ?? undefined,
+        btechYear: (data.btech_year as "1" | "2" | "3" | "4") ?? undefined,
+        stream: (data.stream as FormValues["stream"]) ?? undefined,
+        interests: Array.isArray(data.interests) ? data.interests : [],
+        extraInterests: data.extra_interests ?? "",
+      });
+    }
+
+    setLoading(false);
+  })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
 
   async function onSubmit(values: FormValues) {
     if (!userId) return;

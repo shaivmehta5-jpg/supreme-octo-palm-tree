@@ -9,55 +9,35 @@ export default function AuthCallbackPage() {
   const supabase = createClientComponentClient();
 
   useEffect(() => {
-    (async () => {
-      // After Google redirects back, Supabase should have a session.
-      const { data: { session } } = await supabase.auth.getSession();
+    const hash = window.location.hash;
+    if (hash) {
+      // Convert the hash to URLSearchParams format
+      const params = new URLSearchParams(hash.substring(1));
+      const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
 
-      if (!session?.user) {
-        // If, for some reason, there’s still no session, retry OAuth.
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: { redirectTo: `${window.location.origin}/auth/callback` },
+      if (access_token && refresh_token) {
+        // Store session in Supabase
+        supabase.auth.setSession({
+          access_token,
+          refresh_token,
+        }).then(({ error }) => {
+          if (error) {
+            console.error("Error setting session:", error);
+          } else {
+            // Session stored successfully → go to onboarding
+            router.replace("/onboarding");
+          }
         });
-        return;
-      }
-
-      // Fetch or create profile
-      const { data: profile, error } = await supabase
-        .from("user_profile")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Profile fetch error:", error);
-        // Fallback: go to onboarding and let it handle creation
-        router.replace("/onboarding");
-        return;
-      }
-
-      if (!profile) {
-        const { error: insertError } = await supabase
-          .from("user_profile")
-          .insert([{ user_id: session.user.id, completed_onboarding: false }]);
-
-        if (insertError) {
-          console.error("Profile create error:", insertError);
-          router.replace("/onboarding");
-          return;
-        }
-        router.replace("/onboarding");
-        return;
-      }
-
-      // Route based on completion
-      if (profile.completed_onboarding) {
-        router.replace("/home");
       } else {
-        router.replace("/onboarding");
+        console.error("Missing access or refresh token in callback URL.");
+        router.replace("/login");
       }
-    })();
+    } else {
+      console.error("No hash in callback URL.");
+      router.replace("/login");
+    }
   }, [router, supabase]);
 
-  return <p>Finishing sign-in…</p>;
+  return <p>Signing you in...</p>;
 }

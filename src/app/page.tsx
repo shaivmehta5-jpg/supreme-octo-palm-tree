@@ -34,7 +34,7 @@ export default function Home() {
       
       {/* Start Learning Button */}
       <Link
-        href="/Learn"
+        href="/login"
         className="px-6 py-3 bg-green-600 rounded-md text-white font-semibold shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 transition"
       >
         Start Learning
